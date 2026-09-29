@@ -6,21 +6,21 @@
 #SBATCH --mem=16G
 #SBATCH --gres=gpu:a100:1
 #SBATCH --time=00:10:00
-#SBATCH --output=results/single_gpu/07_profiling/slurm-%j.out
+#SBATCH --output=profile-%j.out
 
 set -euo pipefail
 
 module load python/3.10.8
 
-PROJECT_ROOT="$HOME/HPCTools/HPCtools4AI"
-BASELINE_ROOT="$PROJECT_ROOT/BASELINE"
+BASELINE_ROOT="$SLURM_SUBMIT_DIR"
+PROJECT_ROOT="$(cd "$BASELINE_ROOT/.." && pwd)"
 
 cd "$BASELINE_ROOT"
 source "$PROJECT_ROOT/.venv/bin/activate"
 
 export PYTHONUNBUFFERED=1
 
-OUTDIR="results/single_gpu/07_profiling/profile_run"
+OUTDIR="$BASELINE_ROOT/results/profiling/job_${SLURM_JOB_ID}"
 
 if [[ -e "$OUTDIR" ]]; then
     echo "ERROR: profiling output already exists:"
@@ -43,5 +43,5 @@ srun \
     --ntasks=1 \
     --cpus-per-task=32 \
     --gres=gpu:a100:1 \
-    experiments/single_gpu/07_profiling/profile_run.sh \
+    ./profile_run.sh \
     "$OUTDIR"

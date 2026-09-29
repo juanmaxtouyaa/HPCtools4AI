@@ -1,10 +1,9 @@
 # HPC Tools for AI — Baseline BERT/SQuAD en una sola GPU
 
-**Autor:** Juan-Manuel TOUYÂA TALAVERA  
-**Plataforma:** CESGA FinisTerrae III  
-**Modelo:** `google-bert/bert-base-uncased`  
-**Dataset:** SQuAD v1.1  
-**Framework:** PyTorch + Hugging Face Transformers  
+**Plataforma:** CESGA FinisTerrae III
+**Modelo:** `google-bert/bert-base-uncased`
+**Dataset:** SQuAD v1.1
+**Framework:** PyTorch + Hugging Face Transformers
 **Hardware de referencia:** 1 × NVIDIA A100-PCIE-40GB
 
 ---
@@ -13,7 +12,7 @@
 
 Este informe establece una **baseline reproducible de una sola GPU** para el fine-tuning de BERT sobre SQuAD antes de pasar a entrenamiento distribuido. El estudio analiza el rendimiento de entrenamiento, la utilización de GPU, el uso de memoria, los modos de precisión, el tamaño de batch, la configuración del DataLoader, `torch.compile` y la estabilidad temporal utilizando exactamente una GPU NVIDIA A100.
 
-La baseline final de rendimiento utiliza **BF16**, un **batch size por dispositivo de 160** y **una época completa de SQuAD**. En tres repeticiones válidas, el tiempo medio de entrenamiento fue de **234.58 s**, con un **coeficiente de variación del 0.42%**, lo que proporciona una referencia estable para futuros experimentos de escalado multi-GPU. Un experimento independiente orientado a calidad alcanzó **79.56 Exact Match** y **87.50 F1** en validación de SQuAD.
+La baseline final de rendimiento utiliza **BF16**, un **batch size por dispositivo de 160** y **una época completa de SQuAD**. En tres repeticiones válidas, el tiempo medio de entrenamiento fue de **234.58 s**, con un **coeficiente de variación del 0.42%**, lo que proporciona una referencia estable para futuros experimentos de escalado multi-GPU.
 
 > **Baseline de referencia:** 1 × A100-PCIE-40GB · BF16 · batch 160 · 1 época · **234.58 s de tiempo medio de entrenamiento**
 
@@ -53,14 +52,14 @@ Una primera serie piloto fue descartada porque la configuración de SLURM hacía
 El entorno virtual dedicado se encuentra en:
 
 ```text
-~/HPCTools/HPCtools4AI/.venv
+../.venv
 ```
 
 Se activa con:
 
 ```bash
 module load python/3.10.8
-source ~/HPCTools/HPCtools4AI/.venv/bin/activate
+source ../.venv/bin/activate
 ```
 
 ### 2.2 Preprocesamiento del dataset
@@ -92,7 +91,7 @@ La configuración de rendimiento seleccionada para una sola A100 es:
 | Learning rate | `3e-5` |
 | DataLoader workers | 0 |
 | Gradient accumulation | 1 |
-| Optimizador | AdamW fused |
+| Optimizador | AdamW fused (`adamw_torch_fused`) |
 | Scheduler | Linear |
 | `torch.compile` | Desactivado |
 | TF32 | Comportamiento por defecto de PyTorch |
@@ -211,7 +210,7 @@ Observaciones principales:
 | Memoria GPU máxima | ~26.8 GiB |
 | Potencia GPU media | ~238 W |
 
-El profiling adicional recogió utilización del controlador de memoria GPU, temperatura, clocks de SM y memoria, uso de CPU del árbol de procesos, RSS/memoria virtual, número de threads, carga del nodo y RAM disponible.
+El profiling adicional recogió uso de memoria GPU, temperatura, clock de SM, consumo de potencia y memoria RSS del proceso de entrenamiento.
 
 La utilización sostenida de GPU y la ausencia de mejoras medibles al aumentar los DataLoader workers apoyan la conclusión de que la fase temporizada de entrenamiento está **principalmente limitada por GPU**.
 
@@ -244,79 +243,36 @@ El bajo coeficiente de variación indica una buena estabilidad temporal entre re
 
 ---
 
-## 9. Experimento de control de calidad
-
-La baseline orientada a throughput no pretende maximizar la calidad del modelo. Por ello se realizó un experimento de validación separado con una configuración más próxima al régimen clásico de fine-tuning de BERT sobre SQuAD.
-
-| Parámetro | Valor |
-|---|---:|
-| Ejemplos de entrenamiento | 87,599 |
-| Features de entrenamiento | 88,492 |
-| Batch size | 12 |
-| Épocas | 2 |
-| Learning rate | `3e-5` |
-| Warmup | 1,475 pasos (~10%) |
-| Precisión | BF16 |
-| Optimizador | AdamW fused |
-| Weight decay | 0.01 |
-| `torch.compile` | Desactivado |
-| `drop_last` | Desactivado |
-
-Pérdida de validación:
-
-| Época | Validation loss |
-|---|---:|
-| 1 | 0.9823 |
-| 2 | 0.9893 |
-
-Por tanto, el mejor checkpoint correspondió a la época 1.
-
-### Calidad sobre validación SQuAD
-
-| Métrica | Resultado |
-|---|---:|
-| Exact Match | **79.56** |
-| F1 | **87.50** |
-
-Este experimento muestra la diferencia entre **optimización de throughput HPC** y **generalización del modelo**. El batch size grande seleccionado para maximizar el rendimiento de una sola A100 no es necesariamente la mejor configuración de fine-tuning para calidad de validación.
-
-Como varios hiperparámetros cambiaron simultáneamente, la mejora de calidad no debe atribuirse a un único factor de forma aislada.
-
----
-
-## 10. Reproducibilidad
+## 9. Reproducibilidad
 
 Todas las ejecuciones válidas de rendimiento fuerzan exactamente una GPU CUDA visible.
 
 La semilla aleatoria utilizada es **42**. Aun así, pueden existir pequeñas diferencias numéricas porque los kernels GPU y componentes internos del framework no están garantizados como deterministas bit a bit.
 
-Los resultados generados, checkpoints, archivos TensorBoard, entornos virtuales y pesos de modelos se excluyen intencionadamente de Git. El mejor modelo del experimento de calidad se almacena por separado en `STORE` de CESGA.
+Los resultados generados, checkpoints, archivos TensorBoard, entornos virtuales y pesos de modelos se excluyen intencionadamente de Git.
 
 ### Estructura del repositorio
 
 ```text
 BASELINE/
 ├── README.md
-├── EXPERIMENTS.md
+├── README_ES.md
 ├── train.py
-├── train_experiments.py
-├── train_v3_validation.py
 ├── baseline.slurm
 ├── run_baseline.sh
-└── experiments/
-    ├── 00_diagnostics/
-    ├── pilot_2gpu_invalid/
-    └── single_gpu/
+├── profile.slurm
+└── profile_run.sh
 ```
 
-- `train.py` — implementación oficial de la baseline de una sola A100.
-- `train_experiments.py` — controles utilizados en los experimentos de rendimiento.
-- `train_v3_validation.py` — validación, early stopping, métricas de calidad e instrumentación de recursos.
-- `EXPERIMENTS.md` — registro experimental detallado y medidas.
+- `train.py` — implementación oficial de la baseline sobre una sola A100.
+- `baseline.slurm` — trabajo SLURM oficial para la baseline.
+- `run_baseline.sh` — wrapper de conveniencia para enviar el trabajo de baseline.
+- `profile.slurm` — trabajo SLURM para la ejecución de profiling.
+- `profile_run.sh` — wrapper de muestreo de recursos utilizado durante el profiling.
 
 ---
 
-## 11. Ejecución
+## 10. Ejecución
 
 Desde el directorio `BASELINE`:
 
@@ -332,7 +288,7 @@ sbatch baseline.slurm
 
 ---
 
-## 12. Conclusión
+## 11. Conclusión
 
 La configuración final de referencia es:
 
@@ -348,9 +304,8 @@ batch size 160
 
 La optimización principal fue BF16, que proporcionó aproximadamente un **speedup de 4.87×** sobre el subconjunto controlado. El paralelismo del DataLoader no produjo mejoras medibles y `torch.compile` no resultó ventajoso para este benchmark corto porque el coste de compilación dominó el tiempo total.
 
-La baseline final es temporalmente estable, con un **coeficiente de variación del 0.42%**, y la ejecución independiente orientada a calidad alcanzó **79.56 EM / 87.50 F1**.
+La baseline final es temporalmente estable, con un **coeficiente de variación del 0.42%**.
 
 Por tanto, esta baseline proporciona simultáneamente:
 
 - una referencia reproducible de **rendimiento HPC en una sola GPU**; y
-- una **comprobación de calidad de machine learning** para la futura fase de entrenamiento distribuido.

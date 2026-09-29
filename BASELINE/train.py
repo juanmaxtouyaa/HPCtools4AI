@@ -314,6 +314,8 @@ def main():
         per_device_train_batch_size=args.batch_size,
         learning_rate=args.learning_rate,
         weight_decay=0.01,
+        optim="adamw_torch_fused",
+        lr_scheduler_type="linear",
         logging_strategy="steps",
         logging_steps=50,
         report_to=["tensorboard"],

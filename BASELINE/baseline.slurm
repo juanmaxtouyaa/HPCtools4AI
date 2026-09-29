@@ -12,11 +12,10 @@ set -euo pipefail
 
 module load python/3.10.8
 
-PROJECT_ROOT="$HOME/HPCTools/HPCtools4AI"
-BASELINE_ROOT="$PROJECT_ROOT/BASELINE"
+BASELINE_ROOT="$SLURM_SUBMIT_DIR"
+PROJECT_ROOT="$(cd "$BASELINE_ROOT/.." && pwd)"
 
 cd "$BASELINE_ROOT"
-
 source "$PROJECT_ROOT/.venv/bin/activate"
 
 export PYTHONUNBUFFERED=1
