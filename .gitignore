@@ -1,0 +1,26 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.log
+# Python / virtual environments
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+# ML caches and large model files
+.cache/
+**/checkpoint-*/
+*.safetensors
+pytorch_model.bin
+training_args.bin
+# Experiment outputs
+BASELINE/results/
+**/tensorboard/
+*.out
+# Local/editor files
+.DS_Store
+.idea/
+.vscode/
+
+# Local code archives
+BASELINE/archive/
