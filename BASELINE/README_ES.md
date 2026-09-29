@@ -49,17 +49,14 @@ Una primera serie piloto fue descartada porque la configuración de SLURM hacía
 | Accelerate | 1.15.0 |
 | GPU | NVIDIA A100-PCIE-40GB |
 
-El entorno virtual dedicado se encuentra en:
-
-```text
-../.venv
-```
-
-Se activa con:
+Crea el entorno virtual desde el directorio `BASELINE`:
 
 ```bash
 module load python/3.10.8
+python3 -m venv ../.venv
 source ../.venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
 ### 2.2 Preprocesamiento del dataset
@@ -257,6 +254,7 @@ Los resultados generados, checkpoints, archivos TensorBoard, entornos virtuales 
 BASELINE/
 ├── README.md
 ├── README_ES.md
+├── requirements.txt
 ├── train.py
 ├── baseline.slurm
 ├── run_baseline.sh
@@ -264,6 +262,7 @@ BASELINE/
 └── profile_run.sh
 ```
 
+- `requirements.txt` — dependencias de Python fijadas para recrear el entorno virtual.
 - `train.py` — implementación oficial de la baseline sobre una sola A100.
 - `baseline.slurm` — trabajo SLURM oficial para la baseline.
 - `run_baseline.sh` — wrapper de conveniencia para enviar el trabajo de baseline.
