@@ -31,7 +31,7 @@ La baseline fue diseñada para:
 - identificar cuellos de botella de cómputo, memoria y entrada de datos;
 - proporcionar una referencia reproducible para futuros experimentos de entrenamiento distribuido.
 
-Una primera serie piloto fue descartada porque la configuración de SLURM hacía visibles las dos A100 de un nodo con dos GPUs al proceso de entrenamiento. Esas medidas se conservan únicamente con fines de diagnóstico y **no** forman parte de los resultados válidos de una sola GPU.
+Una primera serie piloto fue descartada porque la configuración de SLURM hacía visibles las dos A100 de un nodo con dos GPUs al proceso de entrenamiento. Esas medidas se excluyeron del entregable final y **no** forman parte de los resultados válidos de una sola GPU.
 
 ---
 
@@ -305,6 +305,4 @@ La optimización principal fue BF16, que proporcionó aproximadamente un **speed
 
 La baseline final es temporalmente estable, con un **coeficiente de variación del 0.42%**.
 
-Por tanto, esta baseline proporciona simultáneamente:
-
-- una referencia reproducible de **rendimiento HPC en una sola GPU**; y
+Por tanto, esta baseline proporciona una referencia reproducible de **rendimiento HPC en una sola GPU** para la fase posterior de entrenamiento distribuido.

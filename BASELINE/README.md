@@ -31,7 +31,7 @@ The baseline was designed to:
 - identify relevant compute, memory, and input-pipeline bottlenecks;
 - provide a reproducible reference for future distributed-training experiments.
 
-An initial pilot series was discarded because the SLURM configuration exposed both GPUs of a two-A100 node to the training process. Those measurements are retained only for diagnostic purposes and are **not** included in the valid single-GPU results.
+An initial pilot series was discarded because the SLURM configuration exposed both GPUs of a two-A100 node to the training process. Those measurements were excluded from the final deliverable and are **not** included in the valid single-GPU results.
 
 ---
 
@@ -305,6 +305,4 @@ The main optimization was BF16, which delivered an approximately **4.87× speedu
 
 The final timing baseline is stable, with a **0.42% coefficient of variation**.
 
-This baseline therefore provides both:
-
-- a reproducible **single-GPU HPC performance reference**; and
+This baseline therefore provides a reproducible **single-GPU HPC performance reference** for the distributed-training phase that follows.
