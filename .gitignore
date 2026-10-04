@@ -24,3 +24,8 @@ BASELINE/results/
 
 # Local code archives
 BASELINE/archive/
+
+# Deliverable 2
+DISTRIBUTED/data/
+DISTRIBUTED/results/**/model/
+DISTRIBUTED/results/**/torch_profile/
