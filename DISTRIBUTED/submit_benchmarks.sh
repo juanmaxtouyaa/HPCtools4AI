@@ -8,10 +8,12 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 REPS="${REPS:-3}"
 CONFIGS="${CONFIGS:-1n1g 1n2g 2n1g 2n2g}"
 
+# 1n1g and 2n1g use one GPU per node: --exclusive keeps other jobs off the node
+# (they would share its PCIe host bridge and InfiniBand link)
 declare -A SBATCH_OPTS=(
-    [1n1g]="--nodes=1 --ntasks-per-node=1 --gres=gpu:a100:1 --mem=32G"
+    [1n1g]="--exclusive --nodes=1 --ntasks-per-node=1 --gres=gpu:a100:1 --mem=32G"
     [1n2g]="--nodes=1 --ntasks-per-node=2 --gres=gpu:a100:2 --mem=64G"
-    [2n1g]="--nodes=2 --ntasks-per-node=1 --gres=gpu:a100:1 --mem=32G"
+    [2n1g]="--exclusive --nodes=2 --ntasks-per-node=1 --gres=gpu:a100:1 --mem=32G"
     [2n2g]="--nodes=2 --ntasks-per-node=2 --gres=gpu:a100:2 --mem=64G"
 )
 
