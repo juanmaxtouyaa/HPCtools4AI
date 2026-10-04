@@ -167,13 +167,18 @@ def plot(rows, path):
     gpus = [r["world_size"] for r in rows]
     top = max(gpus)
     ax.plot([1, top], [1, top], "--", color="grey", label="ideal (linear)")
-    ax.plot(gpus, [r["speedup_vs_baseline"] for r in rows], "o", label="vs official baseline (Trainer)")
-    if all(r["speedup_vs_ddp_1gpu"] for r in rows):
-        ax.plot(gpus, [r["speedup_vs_ddp_1gpu"] for r in rows], "s", label="vs DDP script on 1 GPU")
+    # Main series: the DDP script on 1 GPU is the reference (same code, only the GPU count changes)
+    ref_key = "speedup_vs_ddp_1gpu" if all(r["speedup_vs_ddp_1gpu"] for r in rows) else "speedup_vs_baseline"
+    if ref_key == "speedup_vs_ddp_1gpu":
+        ax.plot(gpus, [r[ref_key] for r in rows], "o", color="#1f77b4", markersize=8,
+                label="vs DDP script on 1 GPU (reference)", zorder=3)
+    ax.plot(gpus, [r["speedup_vs_baseline"] for r in rows], "o", markersize=7, markerfacecolor="none",
+            markeredgecolor="grey", linestyle="none",
+            label="vs Deliverable 1 Trainer baseline\n(includes framework overhead)", zorder=2)
     seen = {}
     for r in rows:  # 1n2g and 2n1g share x = 2: put their labels on opposite sides
         k = seen[r["world_size"]] = seen.get(r["world_size"], -1) + 1
-        ax.annotate(r["config"], (r["world_size"], r["speedup_vs_baseline"]),
+        ax.annotate(r["config"], (r["world_size"], r[ref_key]),
                     textcoords="offset points", xytext=(8, -12) if k % 2 else (-34, 4), fontsize=8)
     ax.set_xlabel("GPUs (A100-PCIE-40GB)")
     ax.set_ylabel("Speedup (time-to-epoch)")

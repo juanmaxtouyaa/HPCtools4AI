@@ -13,7 +13,7 @@
 
 This deliverable distributes the single-GPU BERT/SQuAD fine-tuning of Deliverable 1 over **2 FinisTerrae III nodes with 2 A100 GPUs each**, using native PyTorch **DistributedDataParallel (DDP)** with the NCCL backend. Model, preprocessing, BF16 precision, per-GPU batch size (160), optimizer settings, seed and the timed region are the same as in the baseline; only the number of GPUs changes.
 
-On 4 GPUs one SQuAD epoch takes **57.24 s ± 0.63 s** (3 runs, CV 1.10%). Against the same training script on one GPU (216.73 s) this is a **3.79× speedup, 94.7% parallel efficiency**; against the official Hugging Face Trainer baseline (234.58 s) it is 4.10×. The remaining 5% is almost entirely the gradient all-reduce that DDP cannot overlap with the backward pass: a **≈15 ms exposed tail per step** while the last gradient buckets, including the word-embedding gradient, cross the InfiniBand link.
+On 4 GPUs one SQuAD epoch takes **57.24 s ± 0.63 s** (3 runs, CV 1.10%). Against the same training script on one GPU (216.73 s) this is a **3.79× speedup, 94.7% parallel efficiency**; against the official Hugging Face Trainer baseline (234.58 s) it is 4.10×. The remaining 5% is mostly (about two thirds) the exposed all-reduce tail, a **≈15 ms wait per step** while the last gradient buckets, including the word-embedding gradient, cross the InfiniBand link; the rest is fixed per-step costs.
 
 > **Result:** 2 × 2 A100 · BF16 · 160 per GPU (global 640) · 1 epoch · **57.24 s** · **3.79×** vs DDP on 1 GPU · **94.7%** efficiency
 
@@ -147,7 +147,7 @@ All 12 runs completed the full epoch (554 / 277 / 277 / 139 optimizer steps per 
 
 ### 7.1 GPU utilisation
 
-Mean utilisation over active samples stays at **98–99.7%** in every configuration (baseline Trainer run: 89.6%). Adding GPUs does not starve them: the ranks spend almost all their time computing.
+Mean utilisation over active samples stays at **98–99.7%** in every configuration, against 89.6% for the Trainer baseline in the Deliverable 1 profiling run ([`BASELINE/README.md`](../BASELINE/README.md), §7). Adding GPUs does not starve them: the ranks spend almost all their time computing.
 
 ### 7.2 NCCL transport
 
@@ -227,7 +227,7 @@ The exposed cost on 4 GPUs is T(4) − T(1)/4 = 57.24 − 54.18 = **3.06 s, or 2
 
 ### 8.3 The DDP script is faster than the Trainer baseline on one GPU
 
-With an identical workload (88,492 features, 554 steps, BF16, batch 160, same optimizer settings) the DDP script on one GPU takes **216.73 s, against 234.58 s for the Trainer: the Trainer is ≈ 8% slower**. GPU utilisation shows where the difference comes from: **89.6%** for the Trainer against **99.7%** for the explicit loop.
+With an identical workload (88,492 features, 554 steps, BF16, batch 160, same optimizer settings) the DDP script on one GPU takes **216.73 s, against 234.58 s for the Trainer: the Trainer is ≈ 8% slower**. GPU utilisation shows where the difference comes from: **89.6%** for the Trainer (Deliverable 1 profiling run, [`BASELINE/README.md`](../BASELINE/README.md) §7) against **99.7%** for the explicit loop (mean of the three `1n1g` runs).
 
 - **Likely cause:** per-step host-side work in the Trainer (callbacks, logging bookkeeping, a loss NaN/Inf check that forces a GPU synchronisation every step) leaves the GPU idle between steps. The explicit loop only synchronises every 50 steps.
 - **Consequence:** speedups against the Trainer (up to 4.10×, efficiencies above 100%) mix the effect of distribution with this framework overhead. That is why all efficiencies in this report use the DDP script on one GPU as the reference.
