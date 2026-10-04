@@ -29,3 +29,6 @@ BASELINE/archive/
 DISTRIBUTED/data/
 DISTRIBUTED/results/**/model/
 DISTRIBUTED/results/**/torch_profile/
+
+# Local quality-run outputs (large, not part of the deliverable)
+BASELINE/11_quality_full_squad/

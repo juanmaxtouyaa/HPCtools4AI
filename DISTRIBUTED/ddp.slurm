@@ -23,6 +23,8 @@ DIST_ROOT="$SLURM_SUBMIT_DIR"
 PROJECT_ROOT="$(cd "$DIST_ROOT/.." && pwd)"
 cd "$DIST_ROOT"
 source "$PROJECT_ROOT/.venv/bin/activate"
+# Compute nodes have no internet: use only the local Hugging Face cache
+export HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1
 
 # ---- rendezvous for torch.distributed (env:// initialisation) ----
 export MASTER_ADDR="$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)"
